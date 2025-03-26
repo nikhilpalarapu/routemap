@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Route Map</title>
+  <title>Route Map with YMCA Locations</title>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -23,29 +23,58 @@
 <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 
 <script>
-  // Parse coordinates from URL
+  // Get coordinates from URL
   const urlParams = new URLSearchParams(window.location.search);
   const olat = parseFloat(urlParams.get('olat'));
   const olon = parseFloat(urlParams.get('olon'));
   const dlat = parseFloat(urlParams.get('dlat'));
   const dlon = parseFloat(urlParams.get('dlon'));
 
-  // Fallback in case of bad input
   if (isNaN(olat) || isNaN(olon) || isNaN(dlat) || isNaN(dlon)) {
     alert("Invalid coordinates in URL");
-    throw new Error("Invalid coordinates");
+    throw new Error("Missing or invalid origin/destination coordinates.");
   }
 
-  // Initialize map, temporary center
+  // Initialize map
   const map = L.map('map').setView([(olat + dlat)/2, (olon + dlon)/2], 10);
 
-  // Add base map tiles
+  // Add OpenStreetMap tiles
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '© OpenStreetMap contributors'
   }).addTo(map);
 
-  // Create routing control
+  // YMCA locations
+  const ymcaLocations = [
+    { name: "YMCA 1", lat: 39.3001, lon: -76.6154 },
+    { name: "YMCA 2", lat: 39.3218, lon: -76.6581 },
+    { name: "YMCA 3", lat: 39.2774, lon: -76.6221 },
+    { name: "YMCA 4", lat: 39.3745, lon: -76.5421 },
+    { name: "YMCA 5", lat: 39.3814, lon: -76.5749 },
+    { name: "YMCA 6", lat: 39.3922, lon: -76.5915 },
+    { name: "YMCA 7", lat: 39.3492, lon: -76.6533 },
+    { name: "YMCA 8", lat: 39.2899, lon: -76.6953 },
+    { name: "YMCA 9", lat: 39.2731, lon: -76.7124 },
+    { name: "YMCA 10", lat: 39.2611, lon: -76.6826 },
+    { name: "YMCA 11", lat: 39.3662, lon: -76.7181 },
+    { name: "YMCA 12", lat: 39.4013, lon: -76.7698 },
+    { name: "YMCA 13", lat: 39.4349, lon: -76.7895 },
+    { name: "YMCA 14", lat: 39.4612, lon: -76.7803 },
+    { name: "YMCA 15", lat: 39.4907, lon: -76.7954 },
+    { name: "YMCA 16", lat: 39.5152, lon: -76.7927 },
+    { name: "YMCA 17", lat: 39.5321, lon: -76.7891 },
+    { name: "YMCA 18", lat: 39.5529, lon: -76.7884 },
+    { name: "YMCA 19", lat: 39.5693, lon: -76.7890 }
+  ];
+
+  // Add YMCA markers
+  ymcaLocations.forEach(loc => {
+    L.marker([loc.lat, loc.lon])
+      .addTo(map)
+      .bindPopup(loc.name);
+  });
+
+  // Draw route from origin to destination
   const control = L.Routing.control({
     waypoints: [
       L.latLng(olat, olon),
@@ -56,8 +85,7 @@
     addWaypoints: false,
     showAlternatives: false,
     lineOptions: {
-      addWaypoints: false,
-      styles: [{color: 'blue', weight: 5}]
+      styles: [{ color: 'blue', weight: 5 }]
     },
     createMarker: function(i, wp, nWps) {
       return L.marker(wp.latLng, {
@@ -66,7 +94,7 @@
     }
   }).addTo(map);
 
-  // Auto-zoom and pan to fit the route
+  // Fit map bounds to the route
   control.on('routesfound', function(e) {
     const bounds = L.latLngBounds([]);
     e.routes[0].coordinates.forEach(coord => bounds.extend(coord));
