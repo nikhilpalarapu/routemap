@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Route Map</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+
+  <style>
+    body, html { margin: 0; padding: 0; height: 100%; }
+    #map { height: 100vh; width: 100vw; }
+  </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+
+<script>
+  // Parse coordinates from URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const olat = parseFloat(urlParams.get('olat'));
+  const olon = parseFloat(urlParams.get('olon'));
+  const dlat = parseFloat(urlParams.get('dlat'));
+  const dlon = parseFloat(urlParams.get('dlon'));
+
+  // Fallback in case of bad input
+  if (isNaN(olat) || isNaN(olon) || isNaN(dlat) || isNaN(dlon)) {
+    alert("Invalid coordinates in URL");
+    throw new Error("Invalid coordinates");
+  }
+
+  // Initialize map, temporary center
+  const map = L.map('map').setView([(olat + dlat)/2, (olon + dlon)/2], 10);
+
+  // Add base map tiles
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
+
+  // Create routing control
+  const control = L.Routing.control({
+    waypoints: [
+      L.latLng(olat, olon),
+      L.latLng(dlat, dlon)
+    ],
+    routeWhileDragging: false,
+    draggableWaypoints: false,
+    addWaypoints: false,
+    showAlternatives: false,
+    lineOptions: {
+      addWaypoints: false,
+      styles: [{color: 'blue', weight: 5}]
+    },
+    createMarker: function(i, wp, nWps) {
+      return L.marker(wp.latLng, {
+        draggable: false
+      }).bindPopup(i === 0 ? "Origin" : "Destination");
+    }
+  }).addTo(map);
+
+  // Auto-zoom and pan to fit the route
+  control.on('routesfound', function(e) {
+    const bounds = L.latLngBounds([]);
+    e.routes[0].coordinates.forEach(coord => bounds.extend(coord));
+    map.fitBounds(bounds);
+  });
+</script>
+
+</body>
+</html>
