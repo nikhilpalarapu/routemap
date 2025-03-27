@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Route Map with YMCA, Optional Stop, and Itinerary Toggle</title>
+  <title>Route Map with YMCA and Optional Stop</title>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -12,7 +12,6 @@
   <style>
     body, html { margin: 0; padding: 0; height: 100%; }
     #map { height: 100vh; width: 100vw; }
-    .leaflet-routing-container { background: white; }
   </style>
 </head>
 <body>
@@ -24,6 +23,7 @@
 <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 
 <script>
+  // Parse all coordinates from URL
   const urlParams = new URLSearchParams(window.location.search);
   const olat = parseFloat(urlParams.get('olat'));
   const olon = parseFloat(urlParams.get('olon'));
@@ -37,32 +37,41 @@
     throw new Error("Missing or invalid origin/destination coordinates.");
   }
 
+  // Initialize map
   const map = L.map('map').setView([(olat + dlat) / 2, (olon + dlon) / 2], 10);
 
+  // Add tile layer
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '© OpenStreetMap contributors'
   }).addTo(map);
 
+  // Custom icons
   const blueIcon = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png',
     shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-    iconSize: [25, 41], iconAnchor: [12, 41],
-    popupAnchor: [1, -34], shadowSize: [41, 41]
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
   });
 
   const redIcon = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
     shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-    iconSize: [25, 41], iconAnchor: [12, 41],
-    popupAnchor: [1, -34], shadowSize: [41, 41]
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
   });
 
   const greenIcon = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
     shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-    iconSize: [25, 41], iconAnchor: [12, 41],
-    popupAnchor: [1, -34], shadowSize: [41, 41]
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
   });
 
   // ✅ Correct 17 YMCA locations
@@ -92,12 +101,14 @@
       .bindPopup(loc.name);
   });
 
+  // Prepare route waypoints
   const waypoints = [L.latLng(olat, olon)];
   if (!isNaN(slat) && !isNaN(slon)) {
-    waypoints.push(L.latLng(slat, slon));
+    waypoints.push(L.latLng(slat, slon)); // Stop
   }
   waypoints.push(L.latLng(dlat, dlon));
 
+  // Add the route
   const control = L.Routing.control({
     waypoints: waypoints,
     show: false,
@@ -109,39 +120,21 @@
       styles: [{ color: 'blue', weight: 5 }]
     },
     createMarker: function(i, wp, nWps) {
-      if (i === 0) return L.marker(wp.latLng, { icon: blueIcon }).bindPopup("Origin");
-      else if (i === nWps - 1) return L.marker(wp.latLng, { icon: redIcon }).bindPopup("Destination");
-      else return L.marker(wp.latLng, { icon: greenIcon }).bindPopup("YMCA Stop");
-    }
-  });
-
-  const itineraryContainer = control.onAdd(map);
-  control.onRemove(map);
-
-  const toggleBtn = L.control({ position: 'topright' });
-  toggleBtn.onAdd = function () {
-    const div = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
-    div.innerHTML = '<a href="#" title="Toggle Route Info" style="padding: 6px 10px; font-size: 16px;">🧭</a>';
-    div.style.backgroundColor = 'white';
-    div.onclick = function () {
-      if (map.hasLayer(control)) {
-        map.removeControl(control);
+      if (i === 0) {
+        return L.marker(wp.latLng, { icon: blueIcon }).bindPopup("Origin");
+      } else if (i === nWps - 1) {
+        return L.marker(wp.latLng, { icon: redIcon }).bindPopup("Destination");
       } else {
-        control.addTo(map);
+        return L.marker(wp.latLng, { icon: greenIcon }).bindPopup("YMCA Stop");
       }
-    };
-    return div;
-  };
-  toggleBtn.addTo(map);
+    }
+  }).addTo(map);
 
   control.on('routesfound', function(e) {
     const bounds = L.latLngBounds([]);
     e.routes[0].coordinates.forEach(coord => bounds.extend(coord));
     map.fitBounds(bounds);
   });
-
-  control._plan.setWaypoints(waypoints);
-  control.route();
 </script>
 
 </body>
