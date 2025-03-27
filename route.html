@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Route Map with YMCA Locations</title>
+  <title>Route Map with YMCA and Optional Stop</title>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -23,28 +23,30 @@
 <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 
 <script>
-  // Parse coordinates from URL
+  // Parse all coordinates from URL
   const urlParams = new URLSearchParams(window.location.search);
   const olat = parseFloat(urlParams.get('olat'));
   const olon = parseFloat(urlParams.get('olon'));
   const dlat = parseFloat(urlParams.get('dlat'));
   const dlon = parseFloat(urlParams.get('dlon'));
+  const slat = urlParams.has('slat') ? parseFloat(urlParams.get('slat')) : null;
+  const slon = urlParams.has('slon') ? parseFloat(urlParams.get('slon')) : null;
 
   if (isNaN(olat) || isNaN(olon) || isNaN(dlat) || isNaN(dlon)) {
     alert("Invalid coordinates in URL");
-    throw new Error("Invalid coordinates");
+    throw new Error("Missing or invalid origin/destination coordinates.");
   }
 
-  // Initialize map with center between origin and destination
+  // Initialize map
   const map = L.map('map').setView([(olat + dlat) / 2, (olon + dlon) / 2], 10);
 
-  // Add base map layer
+  // Add tile layer
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '© OpenStreetMap contributors'
   }).addTo(map);
 
-  // Custom icon colors
+  // Custom icons
   const blueIcon = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png',
     shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
@@ -87,7 +89,6 @@
     { name: "Northwest Gibson County YMCA", lat: 35.9568, lon: -88.9469 },
     { name: "Haywood County Branch YMCA", lat: 35.5934, lon: -89.2624 },
     { name: "Hardeman County YMCA", lat: 35.1906, lon: -88.9913 },
-    { name: "Tipton County YMCA", lat: 35.5631, lon: -89.6413 },
     { name: "Madison County YMCA (Jackson)", lat: 35.6465, lon: -88.8195 },
     { name: "Chester County YMCA", lat: 35.4282, lon: -88.6341 },
     { name: "Fayette County YMCA", lat: 35.1584, lon: -89.4027 },
@@ -100,12 +101,16 @@
       .bindPopup(loc.name);
   });
 
-  // Add route between origin and destination
+  // Prepare route waypoints
+  const waypoints = [L.latLng(olat, olon)];
+  if (!isNaN(slat) && !isNaN(slon)) {
+    waypoints.push(L.latLng(slat, slon)); // Stop
+  }
+  waypoints.push(L.latLng(dlat, dlon));
+
+  // Add the route
   const control = L.Routing.control({
-    waypoints: [
-      L.latLng(olat, olon),
-      L.latLng(dlat, dlon)
-    ],
+    waypoints: waypoints,
     routeWhileDragging: false,
     draggableWaypoints: false,
     addWaypoints: false,
@@ -114,13 +119,16 @@
       styles: [{ color: 'blue', weight: 5 }]
     },
     createMarker: function(i, wp, nWps) {
-      const icon = i === 0 ? blueIcon : redIcon;
-      const label = i === 0 ? "Origin" : "Destination";
-      return L.marker(wp.latLng, { icon: icon }).bindPopup(label);
+      if (i === 0) {
+        return L.marker(wp.latLng, { icon: blueIcon }).bindPopup("Origin");
+      } else if (i === nWps - 1) {
+        return L.marker(wp.latLng, { icon: redIcon }).bindPopup("Destination");
+      } else {
+        return L.marker(wp.latLng, { icon: greenIcon }).bindPopup("YMCA Stop");
+      }
     }
   }).addTo(map);
 
-  // Fit map to route
   control.on('routesfound', function(e) {
     const bounds = L.latLngBounds([]);
     e.routes[0].coordinates.forEach(coord => bounds.extend(coord));
