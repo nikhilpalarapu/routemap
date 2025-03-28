@@ -124,15 +124,9 @@
       .bindPopup(loc.name);
   });
 
-  // Create markers for origin and destination
-  L.marker([olat, olon], { icon: blueIcon }).addTo(map).bindPopup("Origin");
-  L.marker([dlat, dlon], { icon: redIcon }).addTo(map).bindPopup("Destination");
-
-  // Create waypoints array
   const waypoints = [L.latLng(olat, olon)];
   if (!isNaN(slat) && !isNaN(slon)) {
     waypoints.push(L.latLng(slat, slon));
-    L.marker([slat, slon], { icon: orangeIcon }).addTo(map).bindPopup("Stop");
   }
   waypoints.push(L.latLng(dlat, dlon));
 
@@ -146,7 +140,11 @@
     lineOptions: {
       styles: [{ color: 'blue', weight: 5 }]
     },
-    // Remove the createMarker function since we're creating markers manually
+    createMarker: function(i, wp, nWps) {
+      if (i === 0) return L.marker(wp.latLng, { icon: blueIcon }).bindPopup("Origin");
+      else if (i === nWps - 1) return L.marker(wp.latLng, { icon: redIcon }).bindPopup("Destination");
+      else return L.marker(wp.latLng, { icon: orangeIcon }).bindPopup("Stop");
+    }
   }).addTo(map);
 
   control.on('routesfound', function(e) {
@@ -156,8 +154,8 @@
     const hours = Math.floor(durationMin / 60);
     const minutes = durationMin % 60;
 
-    document.getElementById('distance').textContent = `${distanceKm} km`;
-    document.getElementById('duration').textContent = `${hours > 0 ? hours + ' hr ' : ''}${minutes} min`;
+    document.getElementById('distance').textContent = ${distanceKm} km;
+    document.getElementById('duration').textContent = ${hours > 0 ? hours + ' hr ' : ''}${minutes} min;
     document.getElementById('summary-box').style.display = 'block';
 
     setTimeout(() => {
@@ -175,20 +173,6 @@
         }, 100);
       }
     }, 300);
-  });
-
-  // Handle case when no route is found
-  control.on('routingerror', function(e) {
-    console.error('Routing error:', e.error);
-    // Fallback: draw a straight line between points
-    const route = L.polyline([waypoints], {color: 'blue', weight: 5}).addTo(map);
-    map.fitBounds(route.getBounds());
-    
-    // Calculate straight-line distance as fallback
-    const distance = waypoints[0].distanceTo(waypoints[waypoints.length-1]) / 1000;
-    document.getElementById('distance').textContent = `${distance.toFixed(1)} km (straight line)`;
-    document.getElementById('duration').textContent = `N/A`;
-    document.getElementById('summary-box').style.display = 'block';
   });
 </script>
 
