@@ -126,7 +126,7 @@
 
   const waypoints = [L.latLng(olat, olon)];
   if (!isNaN(slat) && !isNaN(slon)) {
-    waypoints.push(L.latLng(slat, slon));
+    waypoints.push(L.latLng(slat, slon)); // optional stop
   }
   waypoints.push(L.latLng(dlat, dlon));
 
@@ -158,6 +158,7 @@
     document.getElementById('duration').textContent = `${hours > 0 ? hours + ' hr ' : ''}${minutes} min`;
     document.getElementById('summary-box').style.display = 'block';
 
+    // Fit bounds first
     setTimeout(() => {
       const bounds = e.routes[0].bounds;
       if (bounds) {
@@ -166,11 +167,11 @@
           paddingBottomRight: [30, 100]
         });
 
-        // ✅ Decrease zoom by 1 after bounds fit
-        setTimeout(() => {
+        // After fit, zoom out 1 step for long distances
+        map.once('zoomend', () => {
           const currentZoom = map.getZoom();
           map.setZoom(currentZoom - 1);
-        }, 100);
+        });
       }
     }, 300);
   });
