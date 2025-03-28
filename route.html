@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Route Map with YMCA, Optional Stop, and Itinerary Toggle</title>
+  <title>Route Map with YMCA and Optional Stop</title>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -12,7 +12,6 @@
   <style>
     body, html { margin: 0; padding: 0; height: 100%; }
     #map { height: 100vh; width: 100vw; }
-    .leaflet-routing-container { background: white; }
   </style>
 </head>
 <body>
@@ -24,6 +23,7 @@
 <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 
 <script>
+  // Parse all coordinates from URL
   const urlParams = new URLSearchParams(window.location.search);
   const olat = parseFloat(urlParams.get('olat'));
   const olon = parseFloat(urlParams.get('olon'));
@@ -37,53 +37,63 @@
     throw new Error("Missing or invalid origin/destination coordinates.");
   }
 
+  // Initialize map
   const map = L.map('map').setView([(olat + dlat) / 2, (olon + dlon) / 2], 10);
 
+  // Add tile layer
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '© OpenStreetMap contributors'
   }).addTo(map);
 
+  // Custom icons
   const blueIcon = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png',
     shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-    iconSize: [25, 41], iconAnchor: [12, 41],
-    popupAnchor: [1, -34], shadowSize: [41, 41]
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
   });
 
   const redIcon = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
     shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-    iconSize: [25, 41], iconAnchor: [12, 41],
-    popupAnchor: [1, -34], shadowSize: [41, 41]
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
   });
 
   const greenIcon = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
     shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-    iconSize: [25, 41], iconAnchor: [12, 41],
-    popupAnchor: [1, -34], shadowSize: [41, 41]
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
   });
 
-  // ✅ Correct 17 YMCA locations
+  // Add YMCA facility markers
   const ymcaLocations = [
     { name: "Ric Nuber YMCA", lat: 35.0885, lon: -89.8668 },
     { name: "Millington Family YMCA", lat: 35.3371, lon: -89.8864 },
     { name: "YMCA at Schilling Farms", lat: 35.0416, lon: -89.7011 },
     { name: "Sweeney YMCA", lat: 35.1022, lon: -89.8647 },
-    { name: "Fogelman YMCA", lat: 35.1441, lon: -90.0443 },
-    { name: "Cordova Family YMCA", lat: 35.155, lon: -89.791 },
-    { name: "Bartlett YMCA", lat: 35.204, lon: -89.796 },
-    { name: "Church Health YMCA", lat: 35.152, lon: -90.01 },
-    { name: "Georgette & Cato Johnson YMCA", lat: 35.005, lon: -90.026 },
-    { name: "Milan Family YMCA", lat: 35.9207, lon: -88.7343 },
-    { name: "Northwest Gibson County YMCA", lat: 35.9568, lon: -88.9469 },
-    { name: "Haywood County Branch YMCA", lat: 35.5934, lon: -89.2624 },
-    { name: "Hardeman County YMCA", lat: 35.1906, lon: -88.9913 },
-    { name: "Madison County YMCA (Jackson)", lat: 35.6465, lon: -88.8195 },
-    { name: "Chester County YMCA", lat: 35.4282, lon: -88.6341 },
-    { name: "Fayette County YMCA", lat: 35.1584, lon: -89.4027 },
-    { name: "YMCA of Dyer County", lat: 36.0342, lon: -89.3858 }
+    { name: "Fogelman YMCA", lat: 35.1332, lon: -90.0261 },
+    { name: "Cordova YMCA", lat: 35.1554, lon: -89.8101 },
+    { name: "Bartlett YMCA", lat: 35.2069, lon: -89.8721 },
+    { name: "Lakeland YMCA", lat: 35.2333, lon: -89.7403 },
+    { name: "Germantown YMCA", lat: 35.0869, lon: -89.8107 },
+    { name: "Whitehaven YMCA", lat: 35.0424, lon: -90.0256 },
+    { name: "East Memphis YMCA", lat: 35.1212, lon: -89.9121 },
+    { name: "Arlington YMCA", lat: 35.2925, lon: -89.6622 },
+    { name: "Midtown YMCA", lat: 35.1299, lon: -90.0153 },
+    { name: "South Memphis YMCA", lat: 35.0857, lon: -90.0264 },
+    { name: "Frayser YMCA", lat: 35.2302, lon: -90.0173 },
+    { name: "Collierville YMCA", lat: 35.0541, lon: -89.6904 },
+    { name: "Raleigh YMCA", lat: 35.2082, lon: -89.8957 },
+    { name: "Nuber YMCA", lat: 35.1441, lon: -90.0443 }
   ];
 
   ymcaLocations.forEach(loc => {
@@ -92,15 +102,16 @@
       .bindPopup(loc.name);
   });
 
+  // Prepare route waypoints
   const waypoints = [L.latLng(olat, olon)];
   if (!isNaN(slat) && !isNaN(slon)) {
-    waypoints.push(L.latLng(slat, slon));
+    waypoints.push(L.latLng(slat, slon)); // Stop
   }
   waypoints.push(L.latLng(dlat, dlon));
 
+  // Add the route
   const control = L.Routing.control({
     waypoints: waypoints,
-    show: false,
     routeWhileDragging: false,
     draggableWaypoints: false,
     addWaypoints: false,
@@ -109,39 +120,21 @@
       styles: [{ color: 'blue', weight: 5 }]
     },
     createMarker: function(i, wp, nWps) {
-      if (i === 0) return L.marker(wp.latLng, { icon: blueIcon }).bindPopup("Origin");
-      else if (i === nWps - 1) return L.marker(wp.latLng, { icon: redIcon }).bindPopup("Destination");
-      else return L.marker(wp.latLng, { icon: greenIcon }).bindPopup("YMCA Stop");
-    }
-  });
-
-  const itineraryContainer = control.onAdd(map);
-  control.onRemove(map);
-
-  const toggleBtn = L.control({ position: 'topright' });
-  toggleBtn.onAdd = function () {
-    const div = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
-    div.innerHTML = '<a href="#" title="Toggle Route Info" style="padding: 6px 10px; font-size: 16px;">🧭</a>';
-    div.style.backgroundColor = 'white';
-    div.onclick = function () {
-      if (map.hasLayer(control)) {
-        map.removeControl(control);
+      if (i === 0) {
+        return L.marker(wp.latLng, { icon: blueIcon }).bindPopup("Origin");
+      } else if (i === nWps - 1) {
+        return L.marker(wp.latLng, { icon: redIcon }).bindPopup("Destination");
       } else {
-        control.addTo(map);
+        return L.marker(wp.latLng, { icon: greenIcon }).bindPopup("YMCA Stop");
       }
-    };
-    return div;
-  };
-  toggleBtn.addTo(map);
+    }
+  }).addTo(map);
 
   control.on('routesfound', function(e) {
     const bounds = L.latLngBounds([]);
     e.routes[0].coordinates.forEach(coord => bounds.extend(coord));
     map.fitBounds(bounds);
   });
-
-  control._plan.setWaypoints(waypoints);
-  control.route();
 </script>
 
 </body>
