@@ -12,18 +12,36 @@
   <style>
     body, html { margin: 0; padding: 0; height: 100%; }
     #map { height: 100vh; width: 100vw; }
+
+    .summary-box {
+      position: absolute;
+      bottom: 60px;
+      right: 10px;
+      background: white;
+      padding: 10px 15px;
+      font-family: sans-serif;
+      font-size: 14px;
+      max-width: 240px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      border-radius: 8px;
+      z-index: 999;
+      line-height: 1.4;
+    }
   </style>
 </head>
 <body>
 
 <div id="map"></div>
+<div class="summary-box" id="summary-box" style="display: none;">
+  <strong>🛣️ Distance:</strong> <span id="distance"></span><br>
+  <strong>⏱️ Duration:</strong> <span id="duration"></span>
+</div>
 
 <!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 
 <script>
-  // Parse all coordinates from URL
   const urlParams = new URLSearchParams(window.location.search);
   const olat = parseFloat(urlParams.get('olat'));
   const olon = parseFloat(urlParams.get('olon'));
@@ -37,16 +55,13 @@
     throw new Error("Missing or invalid origin/destination coordinates.");
   }
 
-  // Initialize map
   const map = L.map('map').setView([(olat + dlat) / 2, (olon + dlon) / 2], 10);
 
-  // Add tile layer
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '© OpenStreetMap contributors'
   }).addTo(map);
 
-  // Custom icons
   const blueIcon = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png',
     shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
@@ -74,7 +89,6 @@
     shadowSize: [41, 41]
   });
 
-  // Add YMCA facility markers
   const ymcaLocations = [
     { name: "Ric Nuber YMCA", lat: 35.0885, lon: -89.8668 },
     { name: "Millington Family YMCA", lat: 35.3371, lon: -89.8864 },
@@ -102,20 +116,19 @@
       .bindPopup(loc.name);
   });
 
-  // Prepare route waypoints
   const waypoints = [L.latLng(olat, olon)];
   if (!isNaN(slat) && !isNaN(slon)) {
-    waypoints.push(L.latLng(slat, slon)); // Stop
+    waypoints.push(L.latLng(slat, slon));
   }
   waypoints.push(L.latLng(dlat, dlon));
 
-  // Add the route
   const control = L.Routing.control({
     waypoints: waypoints,
     routeWhileDragging: false,
     draggableWaypoints: false,
     addWaypoints: false,
     showAlternatives: false,
+    show: false,
     lineOptions: {
       styles: [{ color: 'blue', weight: 5 }]
     },
@@ -131,9 +144,18 @@
   }).addTo(map);
 
   control.on('routesfound', function(e) {
-    const bounds = L.latLngBounds([]);
-    e.routes[0].coordinates.forEach(coord => bounds.extend(coord));
-    map.fitBounds(bounds);
+    const summary = e.routes[0].summary;
+    const distanceKm = (summary.totalDistance / 1000).toFixed(1);
+    const durationMin = Math.round(summary.totalTime / 60);
+    const hours = Math.floor(durationMin / 60);
+    const minutes = durationMin % 60;
+
+    document.getElementById('distance').textContent = `${distanceKm} km`;
+    document.getElementById('duration').textContent = `${hours > 0 ? hours + ' hr ' : ''}${minutes} min`;
+    document.getElementById('summary-box').style.display = 'block';
+
+    const bounds = e.routes[0].bounds;
+    if (bounds) map.fitBounds(bounds);
   });
 </script>
 
