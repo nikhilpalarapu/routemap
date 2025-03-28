@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Route Map with YMCA and Optional Stop</title>
+  <title>Route Map with Fallback</title>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -28,16 +28,13 @@
   </style>
 </head>
 <body>
-
 <div id="map"></div>
 <div class="summary-box" id="summary-box" style="display: none;">
-  <strong>🛣️ Distance:</strong> <span id="distance"></span><br>
+  <strong>🛃️ Distance:</strong> <span id="distance"></span><br>
   <strong>⏱️ Duration:</strong> <span id="duration"></span>
 </div>
-
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
-
 <script>
   const urlParams = new URLSearchParams(window.location.search);
   const olat = parseFloat(urlParams.get('olat'));
@@ -68,29 +65,7 @@
     shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
     iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
   });
-  const orangeIcon = new L.Icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-orange.png',
-    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-    iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
-  });
-  const greenIcon = new L.Icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
-    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-    iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
-  });
 
-  // Sample YMCA points (replace with your list)
-  const ymcaLocations = [
-    { name: "Ric Nuber YMCA", lat: 35.0885, lon: -89.8668 },
-    { name: "Fogelman YMCA", lat: 35.1441, lon: -90.0443 }
-  ];
-
-  ymcaLocations.forEach(loc => {
-    L.marker([loc.lat, loc.lon], { icon: greenIcon })
-      .addTo(map).bindPopup(loc.name);
-  });
-
-  // Add origin and destination markers
   const origin = L.latLng(olat, olon);
   const destination = L.latLng(dlat, dlon);
   const waypoints = [origin];
@@ -99,7 +74,6 @@
 
   const control = L.Routing.control({
     waypoints: waypoints,
-    router: L.Routing.osrmv1({ serviceUrl: 'https://router.project-osrm.org/route/v1' }),
     routeWhileDragging: false,
     addWaypoints: false,
     draggableWaypoints: false,
@@ -111,7 +85,7 @@
     createMarker: function(i, wp, nWps) {
       if (i === 0) return L.marker(wp.latLng, { icon: blueIcon }).bindPopup("Origin");
       else if (i === nWps - 1) return L.marker(wp.latLng, { icon: redIcon }).bindPopup("Destination");
-      else return L.marker(wp.latLng, { icon: orangeIcon }).bindPopup("Stop");
+      else return L.marker(wp.latLng).bindPopup("Stop");
     }
   }).addTo(map);
 
@@ -121,12 +95,10 @@
     const durationMin = Math.round(summary.totalTime / 60);
     const hours = Math.floor(durationMin / 60);
     const minutes = durationMin % 60;
-
     document.getElementById('distance').textContent = `${distanceKm} km`;
     document.getElementById('duration').textContent = `${hours > 0 ? hours + ' hr ' : ''}${minutes} min`;
     document.getElementById('summary-box').style.display = 'block';
 
-    // Smart fit with zoom out
     setTimeout(() => {
       const bounds = e.routes[0].bounds;
       if (bounds) {
@@ -142,11 +114,12 @@
     }, 300);
   });
 
-  control.on('routingerror', function(e) {
-    alert("Could not find a route. Check coordinates or try again.");
-    console.error(e);
+  control.on('routingerror', function() {
+    L.polyline([origin, destination], { color: 'blue', weight: 5 }).addTo(map);
+    document.getElementById('summary-box').style.display = 'block';
+    document.getElementById('distance').textContent = 'N/A';
+    document.getElementById('duration').textContent = 'N/A';
   });
 </script>
-
 </body>
 </html>
