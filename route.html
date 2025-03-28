@@ -33,7 +33,7 @@
 
 <div id="map"></div>
 <div class="summary-box" id="summary-box" style="display: none;">
-  <strong>🛣️ Distance:</strong> <span id="distance"></span><br>
+  <strong>🛓️ Distance:</strong> <span id="distance"></span><br>
   <strong>⏱️ Duration:</strong> <span id="duration"></span>
 </div>
 
@@ -154,8 +154,8 @@
     const hours = Math.floor(durationMin / 60);
     const minutes = durationMin % 60;
 
-    document.getElementById('distance').textContent = ${distanceKm} km;
-    document.getElementById('duration').textContent = ${hours > 0 ? hours + ' hr ' : ''}${minutes} min;
+    document.getElementById('distance').textContent = `${distanceKm} km`;
+    document.getElementById('duration').textContent = `${hours > 0 ? hours + ' hr ' : ''}${minutes} min`;
     document.getElementById('summary-box').style.display = 'block';
 
     setTimeout(() => {
