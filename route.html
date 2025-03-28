@@ -147,7 +147,10 @@
     }
   }).addTo(map);
 
-  control.route(); // ✅ Force routing (fixes missing route line)
+  control.route(); // Always trigger route
+  if (waypoints.length === 2) {
+    setTimeout(() => control.route(), 100); // Extra nudge when stop is missing
+  }
 
   control.on('routesfound', function(e) {
     const summary = e.routes[0].summary;
