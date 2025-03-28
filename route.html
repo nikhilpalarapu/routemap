@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Route Map with Summary Info</title>
+  <title>Route Map with Summary</title>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -16,7 +16,7 @@
     .summary-box {
       position: absolute;
       top: 10px;
-      left: 10px;
+      right: 10px;
       background: white;
       padding: 10px 15px;
       font-family: sans-serif;
@@ -128,7 +128,6 @@
 
   control.on('routesfound', function(e) {
     const summary = e.routes[0].summary;
-
     const distanceKm = (summary.totalDistance / 1000).toFixed(1);
     const durationMin = Math.round(summary.totalTime / 60);
     const hours = Math.floor(durationMin / 60);
