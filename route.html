@@ -37,7 +37,6 @@
   <strong>⏱️ Duration:</strong> <span id="duration"></span>
 </div>
 
-<!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 
@@ -127,7 +126,7 @@
 
   const waypoints = [L.latLng(olat, olon)];
   if (!isNaN(slat) && !isNaN(slon)) {
-    waypoints.push(L.latLng(slat, slon)); // orange stop
+    waypoints.push(L.latLng(slat, slon));
   }
   waypoints.push(L.latLng(dlat, dlon));
 
@@ -142,13 +141,9 @@
       styles: [{ color: 'blue', weight: 5 }]
     },
     createMarker: function(i, wp, nWps) {
-      if (i === 0) {
-        return L.marker(wp.latLng, { icon: blueIcon }).bindPopup("Origin");
-      } else if (i === nWps - 1) {
-        return L.marker(wp.latLng, { icon: redIcon }).bindPopup("Destination");
-      } else {
-        return L.marker(wp.latLng, { icon: orangeIcon }).bindPopup("Stop");
-      }
+      if (i === 0) return L.marker(wp.latLng, { icon: blueIcon }).bindPopup("Origin");
+      else if (i === nWps - 1) return L.marker(wp.latLng, { icon: redIcon }).bindPopup("Destination");
+      else return L.marker(wp.latLng, { icon: orangeIcon }).bindPopup("Stop");
     }
   }).addTo(map);
 
@@ -163,8 +158,16 @@
     document.getElementById('duration').textContent = `${hours > 0 ? hours + ' hr ' : ''}${minutes} min`;
     document.getElementById('summary-box').style.display = 'block';
 
-    const bounds = e.routes[0].bounds;
-    if (bounds) map.fitBounds(bounds);
+    setTimeout(() => {
+      const bounds = e.routes[0].bounds;
+      if (bounds) {
+        map.fitBounds(bounds, {
+          paddingTopLeft: [30, 30],
+          paddingBottomRight: [30, 100],
+          maxZoom: 15
+        });
+      }
+    }, 300); // wait for Tableau layout
   });
 </script>
 
