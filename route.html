@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Route Map with Responsive Summary</title>
+  <title>Route Map with Summary (Fixed Zoom + Box)</title>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
 
@@ -25,7 +24,6 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.2);
       border-radius: 8px;
       z-index: 999;
-      word-wrap: break-word;
       line-height: 1.4;
     }
   </style>
@@ -38,7 +36,6 @@
   <strong>⏱️ Duration:</strong> <span id="duration"></span>
 </div>
 
-<!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 
@@ -115,9 +112,9 @@
   const control = L.Routing.control({
     waypoints: waypoints,
     show: false,
-    routeWhileDragging: false,
-    draggableWaypoints: false,
     addWaypoints: false,
+    draggableWaypoints: false,
+    routeWhileDragging: false,
     showAlternatives: false,
     lineOptions: {
       styles: [{ color: 'blue', weight: 5 }]
@@ -131,6 +128,7 @@
 
   control.on('routesfound', function(e) {
     const summary = e.routes[0].summary;
+
     const distanceKm = (summary.totalDistance / 1000).toFixed(1);
     const durationMin = Math.round(summary.totalTime / 60);
     const hours = Math.floor(durationMin / 60);
@@ -140,9 +138,9 @@
     document.getElementById('duration').textContent = `${hours > 0 ? hours + ' hr ' : ''}${minutes} min`;
     document.getElementById('summary-box').style.display = 'block';
 
-    const bounds = L.latLngBounds([]);
-    e.routes[0].coordinates.forEach(coord => bounds.extend(coord));
-    map.fitBounds(bounds);
+    // ✅ Auto zoom only after route is drawn
+    const bounds = e.routes[0].bounds;
+    if (bounds) map.fitBounds(bounds);
   });
 </script>
 
