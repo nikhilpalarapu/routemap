@@ -158,21 +158,14 @@
     document.getElementById('duration').textContent = `${hours > 0 ? hours + ' hr ' : ''}${minutes} min`;
     document.getElementById('summary-box').style.display = 'block';
 
-    setTimeout(() => {
-      const bounds = e.routes[0].bounds;
-      if (bounds) {
-        map.fitBounds(bounds, {
-          paddingTopLeft: [30, 30],
-          paddingBottomRight: [30, 100]
-        });
+    const bounds = L.latLngBounds([]);
+    e.routes[0].coordinates.forEach(coord => bounds.extend(coord));
+    map.fitBounds(bounds);
 
-        // ✅ Decrease zoom by 1 after bounds fit
-        setTimeout(() => {
-          const currentZoom = map.getZoom();
-          map.setZoom(currentZoom - 1);
-        }, 100);
-      }
-    }, 300);
+    setTimeout(() => {
+      const currentZoom = map.getZoom();
+      map.setZoom(currentZoom - 1);
+    }, 100);
   });
 </script>
 
