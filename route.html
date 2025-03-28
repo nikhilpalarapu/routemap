@@ -163,9 +163,14 @@
       if (bounds) {
         map.fitBounds(bounds, {
           paddingTopLeft: [30, 30],
-          paddingBottomRight: [30, 100],
-          maxZoom: 15
+          paddingBottomRight: [30, 100]
         });
+
+        // ✅ Decrease zoom by 1 after bounds fit
+        setTimeout(() => {
+          const currentZoom = map.getZoom();
+          map.setZoom(currentZoom - 1);
+        }, 100);
       }
     }, 300);
   });
